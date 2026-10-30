@@ -1,10 +1,12 @@
-# VOIDLINE / 深空舰队棋 · Tactical Academy 04
+# VOIDLINE / 深空舰队棋 · Player Deck 05
 
 A playable 3D fleet tactics prototype. Original procedural ship geometry and low-poly asteroid art; no downloaded art or third-party IP. Rendering uses a rotatable orthographic 3D projection with per-face depth sorting on Canvas 2D. Game coordinates and combat are fully three dimensional.
 
 ## 快速开始 / Quick start
 
 VOIDLINE 是以三维空间、舰体舱段和两舰协作为核心的太空战术棋。包括 4 课基础教学、3 套开局计划和 4 道残局题。
+
+[English version](https://voidline-fleet-chess.citrusjay16.chatgpt.site/?lang=en) · 可在右上角随时切换语言。
 
 线上版本：[VOIDLINE](https://voidline-fleet-chess.citrusjay16.chatgpt.site/)（保留原站点访问权限）。
 
@@ -18,7 +20,7 @@ npm run dev -- --host 127.0.0.1 --port 5180
 打开 [本地预览](http://127.0.0.1:5180)。开发服务器仅用于本机预览，会使用本地模拟登录。AI、教学和本机双人可直接使用；房间对战依赖 Cloudflare D1，集成检查见下方 Development。
 
 ```sh
-node --test tests/rules.test.mjs tests/turns.test.mjs tests/academy.test.mjs
+node --test tests/*.test.mjs
 node node_modules/typescript/bin/tsc --noEmit
 npm run build
 ```
@@ -27,7 +29,9 @@ npm run build
 
 ## Play
 
-- The homepage opens the tactical academy. Four interactive lessons, three opening walkthroughs and four endgame puzzles teach one problem at a time. Hints, undo, retry, demonstrations and browser-local progress are supported; demonstrations do not count as completion. `/play` opens the complete game, and original `/?room=` invitation links still work.
+- The homepage is a player command deck: edit your local callsign, continue the next unfinished exercise, see real lesson/puzzle progress, or choose AI, local two-player or online rooms. Profile and progress are saved on this device, not in a cloud account.
+- Switch between Chinese and English in the header. `/?lang=en` opens the English version; language is remembered and carried through internal links and room invitations. Training, hints, opening explanations, commands, combat feedback, canvas labels and errors are translated. Switching language preserves the current game and pending action. Shared rules, game IDs and room state remain unchanged.
+- `/academy` opens four interactive lessons, three opening walkthroughs and four endgame puzzles. Hints, undo, retry, demonstrations and browser-local progress are supported; demonstrations do not count as completion. Link directly with `/academy?study=two-ships` or `/academy?tab=puzzle`. `/play?mode=ai`, `local` or `online` selects a game entry; original `/?room=` invitation links still work.
 - Opening walkthroughs show a legal plan, one illustrative opponent response, the tradeoff, and live range/shield facts. Continue the resulting position against AI using `/play?opening=escort` (or `flanks`, `reserve`). They are not claims of optimal play.
 - AI exercise: human blue, deterministic heuristic AI orange.
 - Same-device two-player: alternate full turns on one screen, with two different ship activations each.
@@ -62,7 +66,9 @@ Structured combat records contain actual HP loss, absorbed shield damage, module
 
 ## Development
 
-`npm run dev -- --port 5180` for local preview. `node --test tests/rules.test.mjs tests/turns.test.mjs tests/academy.test.mjs` runs 54 tests including a complete AI match and exhaustive checks of all four endgames. `node scripts/analyze-tactics.mjs` regenerates the analysis in `research/tactical-analysis.json`; the design findings and search limits are documented in `research/README.md`. `node tests/rooms-v3.integration.mjs` verifies local D1 authentication, concurrency, reconnection, two-activation turns and combat records (set `VOIDLINE_TEST_URL` for a different local server). Run `node node_modules/typescript/bin/tsc --noEmit` for types. Sites build/source helpers package and publish the Worker and apply Drizzle migrations. The academy preserves version 3 game and room state, so it needs no schema migration and existing v3 rooms remain usable.
+`npm run dev -- --port 5180` for local preview. `node --test tests/*.test.mjs` runs 60 tests, including a complete AI match, exhaustive endgame checks, translation coverage, real combat-message translation and preference/link persistence. `node scripts/analyze-tactics.mjs` regenerates the analysis in `research/tactical-analysis.json`; the design findings and search limits are documented in `research/README.md`. `node tests/rooms-v3.integration.mjs` verifies local D1 authentication, concurrency, reconnection, two-activation turns and combat records (set `VOIDLINE_TEST_URL` for a different local server). Run `node node_modules/typescript/bin/tsc --noEmit` for types. Sites build/source helpers package and publish the Worker and apply Drizzle migrations. This interface update preserves version 3 game and room state, so it needs no schema migration and existing v3 rooms remain usable.
+
+English messages live in `game/locales/en.json`. `Localized` translates React text nodes and accessible labels; it never changes action payloads or input values. The canvas uses the same translator. `node scripts/extract-messages.mjs list` lists source messages for translation coverage review.
 
 ## Prototype limits
 

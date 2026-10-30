@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./player.css";
+import {PreferencesProvider} from './preferences';
 
 export const metadata: Metadata = {
   title: "VOIDLINE · 深空舰队棋",
@@ -17,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased"><PreferencesProvider>{children}</PreferencesProvider></body>
     </html>
   );
 }

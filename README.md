@@ -15,7 +15,7 @@ npm ci
 npm run dev -- --host 127.0.0.1 --port 5180
 ```
 
-打开 http://127.0.0.1:5180。开发服务器仅用于本机预览，会使用本地模拟登录。AI、教学和本机双人可直接使用；房间对战依赖 Cloudflare D1，初始化及集成检查见下方 Development。
+打开 [本地预览](http://127.0.0.1:5180)。开发服务器仅用于本机预览，会使用本地模拟登录。AI、教学和本机双人可直接使用；房间对战依赖 Cloudflare D1，集成检查见下方 Development。
 
 ```sh
 node --test tests/rules.test.mjs tests/turns.test.mjs tests/academy.test.mjs

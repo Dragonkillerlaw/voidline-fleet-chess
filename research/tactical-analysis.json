@@ -1,0 +1,674 @@
+{
+  "scope": "Exhaustive legal actions within the stated one-turn puzzle horizon; full opponent reply for delayed-win puzzle. Opening plans are examples, not proven optimal.",
+  "puzzles": [
+    {
+      "id": "mate-focus",
+      "nodes": 1393,
+      "solutions": 2,
+      "firstActions": [
+        {
+          "kind": "fire",
+          "id": "0-1",
+          "target": [
+            7,
+            2,
+            7
+          ]
+        },
+        {
+          "kind": "fire",
+          "id": "0-2",
+          "target": [
+            7,
+            2,
+            7
+          ]
+        }
+      ],
+      "examples": [
+        [
+          {
+            "kind": "fire",
+            "id": "0-1",
+            "target": [
+              7,
+              2,
+              7
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-2",
+            "target": [
+              7,
+              2,
+              7
+            ]
+          }
+        ],
+        [
+          {
+            "kind": "fire",
+            "id": "0-2",
+            "target": [
+              7,
+              2,
+              7
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-1",
+            "target": [
+              7,
+              2,
+              7
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "mate-shield",
+      "nodes": 462,
+      "solutions": 1,
+      "firstActions": [
+        {
+          "kind": "fire",
+          "id": "0-0"
+        }
+      ],
+      "examples": [
+        [
+          {
+            "kind": "fire",
+            "id": "0-0"
+          },
+          {
+            "kind": "fire",
+            "id": "0-1",
+            "target": [
+              8,
+              3,
+              8
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "id": "mate-clear",
+      "nodes": 375,
+      "solutions": 13,
+      "firstActions": [
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            7,
+            2,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            8,
+            2,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            9,
+            2,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            10,
+            2,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            5,
+            2,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            4,
+            2,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            3,
+            2,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            2,
+            2,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            6,
+            3,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            6,
+            4,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            6,
+            5,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            6,
+            1,
+            6
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-1",
+          "to": [
+            6,
+            0,
+            6
+          ]
+        }
+      ],
+      "examples": [
+        [
+          {
+            "kind": "move",
+            "id": "0-1",
+            "to": [
+              7,
+              2,
+              6
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-0"
+          }
+        ],
+        [
+          {
+            "kind": "move",
+            "id": "0-1",
+            "to": [
+              8,
+              2,
+              6
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-0"
+          }
+        ],
+        [
+          {
+            "kind": "move",
+            "id": "0-1",
+            "to": [
+              9,
+              2,
+              6
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-0"
+          }
+        ],
+        [
+          {
+            "kind": "move",
+            "id": "0-1",
+            "to": [
+              10,
+              2,
+              6
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-0"
+          }
+        ],
+        [
+          {
+            "kind": "move",
+            "id": "0-1",
+            "to": [
+              5,
+              2,
+              6
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-0"
+          }
+        ],
+        [
+          {
+            "kind": "move",
+            "id": "0-1",
+            "to": [
+              4,
+              2,
+              6
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-0"
+          }
+        ],
+        [
+          {
+            "kind": "move",
+            "id": "0-1",
+            "to": [
+              3,
+              2,
+              6
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-0"
+          }
+        ],
+        [
+          {
+            "kind": "move",
+            "id": "0-1",
+            "to": [
+              2,
+              2,
+              6
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-0"
+          }
+        ]
+      ]
+    },
+    {
+      "id": "mate-delay",
+      "nodes": 48311,
+      "solutions": 10,
+      "firstActions": [
+        {
+          "kind": "move",
+          "id": "0-0",
+          "to": [
+            7,
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-0",
+          "to": [
+            5,
+            2,
+            2
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-0",
+          "to": [
+            6,
+            3,
+            2
+          ]
+        },
+        {
+          "kind": "move",
+          "id": "0-0",
+          "to": [
+            6,
+            1,
+            2
+          ]
+        },
+        {
+          "kind": "fire",
+          "id": "0-1",
+          "target": [
+            6,
+            2,
+            8
+          ]
+        },
+        {
+          "kind": "fire",
+          "id": "0-2",
+          "target": [
+            6,
+            2,
+            10
+          ]
+        }
+      ],
+      "examples": [
+        [
+          {
+            "kind": "move",
+            "id": "0-0",
+            "to": [
+              7,
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-2",
+            "target": [
+              6,
+              2,
+              10
+            ]
+          }
+        ],
+        [
+          {
+            "kind": "move",
+            "id": "0-0",
+            "to": [
+              5,
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-2",
+            "target": [
+              6,
+              2,
+              10
+            ]
+          }
+        ],
+        [
+          {
+            "kind": "move",
+            "id": "0-0",
+            "to": [
+              6,
+              3,
+              2
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-2",
+            "target": [
+              6,
+              2,
+              10
+            ]
+          }
+        ],
+        [
+          {
+            "kind": "move",
+            "id": "0-0",
+            "to": [
+              6,
+              1,
+              2
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-2",
+            "target": [
+              6,
+              2,
+              10
+            ]
+          }
+        ],
+        [
+          {
+            "kind": "fire",
+            "id": "0-1",
+            "target": [
+              6,
+              2,
+              8
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-2",
+            "target": [
+              6,
+              2,
+              10
+            ]
+          }
+        ],
+        [
+          {
+            "kind": "fire",
+            "id": "0-2",
+            "target": [
+              6,
+              2,
+              10
+            ]
+          },
+          {
+            "kind": "move",
+            "id": "0-0",
+            "to": [
+              7,
+              2,
+              2
+            ]
+          }
+        ],
+        [
+          {
+            "kind": "fire",
+            "id": "0-2",
+            "target": [
+              6,
+              2,
+              10
+            ]
+          },
+          {
+            "kind": "move",
+            "id": "0-0",
+            "to": [
+              5,
+              2,
+              2
+            ]
+          }
+        ],
+        [
+          {
+            "kind": "fire",
+            "id": "0-2",
+            "target": [
+              6,
+              2,
+              10
+            ]
+          },
+          {
+            "kind": "move",
+            "id": "0-0",
+            "to": [
+              6,
+              3,
+              2
+            ]
+          }
+        ]
+      ]
+    }
+  ],
+  "openings": [
+    {
+      "id": "escort",
+      "before": {
+        "inMissileRange": [
+          "0-6"
+        ],
+        "protectedCores": [
+          "0-2"
+        ],
+        "readyGunThreats": [],
+        "flagBeamEnemyModules": 0
+      },
+      "afterOwnTurn": {
+        "inMissileRange": [
+          "0-6",
+          "0-10"
+        ],
+        "protectedCores": [
+          "0-2",
+          "0-4",
+          "0-6"
+        ],
+        "readyGunThreats": [],
+        "flagBeamEnemyModules": 0
+      },
+      "afterReply": {
+        "inMissileRange": [
+          "0-6",
+          "0-10"
+        ],
+        "protectedCores": [
+          "0-2",
+          "0-4",
+          "0-6"
+        ],
+        "readyGunThreats": [
+          "0-9"
+        ],
+        "flagBeamEnemyModules": 0
+      }
+    },
+    {
+      "id": "flanks",
+      "before": {
+        "inMissileRange": [
+          "0-6"
+        ],
+        "protectedCores": [
+          "0-2"
+        ],
+        "readyGunThreats": [],
+        "flagBeamEnemyModules": 0
+      },
+      "afterOwnTurn": {
+        "inMissileRange": [
+          "0-6"
+        ],
+        "protectedCores": [
+          "0-2"
+        ],
+        "readyGunThreats": [],
+        "flagBeamEnemyModules": 0
+      },
+      "afterReply": {
+        "inMissileRange": [
+          "0-6"
+        ],
+        "protectedCores": [
+          "0-2"
+        ],
+        "readyGunThreats": [],
+        "flagBeamEnemyModules": 0
+      }
+    },
+    {
+      "id": "reserve",
+      "before": {
+        "inMissileRange": [
+          "0-6"
+        ],
+        "protectedCores": [
+          "0-2"
+        ],
+        "readyGunThreats": [],
+        "flagBeamEnemyModules": 0
+      },
+      "afterOwnTurn": {
+        "inMissileRange": [],
+        "protectedCores": [
+          "0-2"
+        ],
+        "readyGunThreats": [],
+        "flagBeamEnemyModules": 0
+      },
+      "afterReply": {
+        "inMissileRange": [],
+        "protectedCores": [
+          "0-2"
+        ],
+        "readyGunThreats": [],
+        "flagBeamEnemyModules": 0
+      }
+    }
+  ]
+}

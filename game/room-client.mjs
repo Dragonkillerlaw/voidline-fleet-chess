@@ -1,4 +1,7 @@
 export const ROOM_SESSION = 'voidline-room-v4';
+export class RoomError extends Error {
+ constructor(message,status,code){super(message);this.name='RoomError';this.status=status;this.code=code;}
+}
 
 export function restoreSeat(raw) {
  try {
@@ -37,7 +40,7 @@ export async function roomRequest({body, code, token, revision, signal, timeoutM
   });
   let data;
   try { data = await response.json(); } catch { throw new Error('服务器暂时不可用，请重试'); }
-  if (!response.ok) throw new Error(data.error || '连接失败');
+  if (!response.ok) throw new RoomError(data.error || '连接失败',response.status,data.code);
   return data;
  } catch (error) {
   if (timedOut) throw new Error('连接超时，请检查网络后重试。');

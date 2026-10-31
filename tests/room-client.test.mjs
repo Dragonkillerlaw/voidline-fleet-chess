@@ -62,6 +62,7 @@ test('leaving aborts requests, including callers already aborted before fetch', 
 });
 
 test('server and network failures produce usable messages instead of JSON parsing errors', async () => {
+ await assert.rejects(roomRequest({fetchImpl:async()=>Response.json({error:'Room needs a new game',code:'RULES_CHANGED'},{status:409})}),{name:'RoomError',code:'RULES_CHANGED',status:409,message:'Room needs a new game'});
  await assert.rejects(roomRequest({fetchImpl: async () => new Response('<html>Unavailable</html>', {status: 503})}), /服务器暂时不可用/);
  await assert.rejects(roomRequest({fetchImpl: async () => Response.json({error: '棋局已更新，请稍后重试'}, {status: 409})}), /棋局已更新/);
  await assert.rejects(roomRequest({fetchImpl: async () => {throw new TypeError('Failed to fetch');}}), /网络中断/);

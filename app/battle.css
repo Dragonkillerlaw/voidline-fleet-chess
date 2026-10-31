@@ -6,3 +6,4 @@
 @media(prefers-reduced-motion:reduce){.turn-banner{animation:none}}
 
 .battle-v3 .statusbar>div{align-items:center;flex-wrap:wrap;flex-shrink:1;justify-content:flex-end}.connection-status{max-width:180px;color:#94cbdc;overflow-wrap:anywhere}
+.room-recovery{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px;margin-top:14px;border:1px solid #a7744e;border-radius:6px;background:#31251d;color:#ffddbd}.room-recovery strong{font-size:16px}.room-recovery p{font-size:13px;line-height:1.6;margin:6px 0 0}.room-recovery button{flex-shrink:0}@media(max-width:700px){.room-recovery{align-items:stretch;flex-direction:column}}

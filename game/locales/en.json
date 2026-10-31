@@ -685,5 +685,9 @@
   "唯一主力舰。先蓄力，下个己方回合可在舰首前方 45°空间锥内选择一条贯穿射线。移动或转向会取消蓄力。": "Your only capital ship. Charge first; on your next turn choose one piercing ray within a 45° space cone around the bow. Movement or rotation cancels charge.",
   "目标须在前方 45°、14 格内，且射线未被小行星截断": "Aim inside the forward 45° cone and range 14, with no asteroid blocking the ray",
   "主炮未就绪，或目标超出前方 45°射界、射程或被小行星遮挡": "Cannon not ready, or the aim is outside the forward 45° cone, out of range, or blocked by an asteroid",
-  "母舰瞄准 {0}，释放贯穿主炮": "Mothership aims at {0} and fires the piercing cannon"
+  "母舰瞄准 {0}，释放贯穿主炮": "Mothership aims at {0} and fires the piercing cannon",
+  "房间需要重建": "Create a new room",
+  "创建新版房间": "Create a new room",
+  "此房间无法自动升级，请创建新版房间并分享新的邀请链接。": "This room cannot be upgraded automatically. Create a new room and share its new invite link.",
+  "尚未开局的旧版房间自动升级。已开局的旧版对局需重建；房间保留七天。": "Unstarted rooms upgrade automatically. Older games already in progress need a new room. Rooms last seven days."
 }

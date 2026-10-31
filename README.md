@@ -70,7 +70,7 @@ Translation is axis-aligned and the complete hull must clear each intermediate v
 
 Ordinary guns follow the 26 axial/diagonal rays and stop at rocks, nebula, hulls and wrecks. Missile blasts can damage friends, ignore intervening obstacles, and cannot target rock cells. Ships may traverse nebula. Damage applies to individual modules: engine loss immobilizes larger ships; weapon loss disables their gun; capacitor loss disables charging. Aegis shields are shared pools, not separate shields on each ally.
 
-Older room snapshots are retained in storage but cannot be opened under version 4 rules. Create a new room for the current cannon rules. Local session storage is versioned to avoid restoring an incompatible seat.
+Unstarted v3 rooms upgrade automatically to v4, preserving the board, room code and both player seats. A compare-and-swap update increments the revision once so connected clients reload the board. Games that already contain an action remain unchanged and show a prominent new-room prompt. Saved v3 seats can be restored; joining again with a valid seat credential resumes that seat instead of reporting a full room.
 
 ## Feedback and interface
 
@@ -88,13 +88,13 @@ Cannon aiming uses target-cell centers within the cone; the shot traverses every
 
 ## Development
 
-`npm run dev -- --port 5180` for local preview. `node --test tests/*.test.mjs` runs 96 tests, including a complete AI match, exhaustive endgame checks, translation coverage, real combat-message translation and preference/link persistence. `node scripts/analyze-tactics.mjs` regenerates the analysis in `research/tactical-analysis.json`; the design findings and search limits are documented in `research/README.md`. `node tests/rooms-v3.integration.mjs` verifies local D1 authentication, concurrency, reconnection, two-activation turns and combat records (set `VOIDLINE_TEST_URL` for a different local server). Run `node node_modules/typescript/bin/tsc --noEmit` for types. Sites build/source helpers package and publish the Worker and apply Drizzle migrations. This release uses rules version 4. Existing v3 rooms are retained but cannot be continued under the changed cannon rules; create a new room. No database schema migration is needed.
+`npm run dev -- --port 5180` for local preview. `node --test tests/*.test.mjs` runs 100 tests, including a complete AI match, exhaustive endgame checks, translation coverage, real combat-message translation and preference/link persistence. `node scripts/analyze-tactics.mjs` regenerates the analysis in `research/tactical-analysis.json`; the design findings and search limits are documented in `research/README.md`. `node tests/rooms-v3.integration.mjs` verifies local D1 authentication, concurrency, reconnection, two-activation turns and combat records (set `VOIDLINE_TEST_URL` for a different local server). Run `node node_modules/typescript/bin/tsc --noEmit` for types. Sites build/source helpers package and publish the Worker and apply Drizzle migrations. This release uses rules version 4. Unstarted v3 rooms are upgraded in place; older games already in progress are retained and require a new room. No database schema migration is needed. `node tests/rooms-upgrade.integration.mjs` verifies legacy-room upgrades and recovery against local D1 using fixtures created by that test.
 
 English messages live in `game/locales/en.json`. `Localized` translates React text nodes and accessible labels; it never changes action payloads or input values. The canvas uses the same translator. `node scripts/extract-messages.mjs list` lists source messages for translation coverage review.
 
 ## Prototype limits
 
-AI uses local heuristics rather than deep search. Balance and match duration are unproven. Room polling is 1.2 seconds, backing off to 10 seconds after failures; two player seats, no spectators or matchmaking. Current hosting audience is private until explicitly changed. No public contest submission has been made.
+AI uses local heuristics rather than deep search. Balance and match duration are unproven. Room polling is 1.2 seconds, backing off to 10 seconds after failures; two player seats, no spectators or matchmaking. Incompatible started games stop polling and disable orders until a new room is created. The hosted game and GitHub repository are public. No contest submission has been made.
 
 ## Attribution
 

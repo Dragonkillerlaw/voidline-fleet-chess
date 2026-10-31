@@ -1,28 +1,32 @@
 import {translate} from './i18n.mjs';
+import {FrameLoop} from './frame-loop.mjs';
 import {SIZE,cells,alive,DIRS,TYPES,add,mul,eq,key,coord,at,trace,inside,beam,charged,shieldActive,groupMove,hasActed} from './engine.mjs';
 const BLUE='#77dcf4',ORANGE='#ff9c75';
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 function inPoly(p,poly){let ok=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)ok=!ok;}return ok;}
 export class FleetScene{
  constructor(canvas,onPick,onHover){
-  this.canvas=canvas;this.ctx=canvas.getContext('2d');this.yaw=.68;this.pitch=.64;this.zoom=1;this.pan=[0,0];this.focusPoint=null;this.onPick=onPick;this.onHover=onHover;this.hits=[];this.options={};this.running=true;
+  this.canvas=canvas;this.ctx=canvas.getContext('2d');this.yaw=.68;this.pitch=.64;this.zoom=1;this.pan=[0,0];this.focusPoint=null;this.onPick=onPick;this.onHover=onHover;this.hits=[];this.options={};
+  this.frames=new FrameLoop(time=>{this.draw(time);return this.isAnimating(time);});
   this.down=null;this.drag=false;this.handlers={
    pointerdown:e=>{this.down={x:e.offsetX,y:e.offsetY,yaw:this.yaw,pitch:this.pitch,pan:[...this.pan],panning:e.shiftKey||e.button===2};this.drag=false;canvas.setPointerCapture(e.pointerId);},
-   pointermove:e=>{if(this.down){const dx=e.offsetX-this.down.x,dy=e.offsetY-this.down.y;if(Math.hypot(dx,dy)>5)this.drag=true;if(this.drag){if(this.down.panning)this.pan=[this.down.pan[0]+dx,this.down.pan[1]+dy];else{this.yaw=this.down.yaw+dx*.008;this.pitch=Math.max(.22,Math.min(1.48,this.down.pitch+dy*.006));}}}else {const hit=this.pick(e.offsetX,e.offsetY);this.hover=hit;onHover(hit);}},
+   pointermove:e=>{if(this.down){const dx=e.offsetX-this.down.x,dy=e.offsetY-this.down.y;if(Math.hypot(dx,dy)>5)this.drag=true;if(this.drag){if(this.down.panning)this.pan=[this.down.pan[0]+dx,this.down.pan[1]+dy];else{this.yaw=this.down.yaw+dx*.008;this.pitch=Math.max(.22,Math.min(1.48,this.down.pitch+dy*.006));}this.frames.invalidate();}}else this.setHover(this.pick(e.offsetX,e.offsetY));},
    pointerup:e=>{if(this.down&&!this.drag)onPick(this.pick(e.offsetX,e.offsetY));this.down=null;},
-   pointercancel:()=>{this.down=null;},pointerleave:()=>{this.hover=null;onHover(null);},
-   contextmenu:e=>e.preventDefault(),wheel:e=>{e.preventDefault();this.zoom=Math.max(.65,Math.min(3.2,this.zoom-e.deltaY*.0015));}
+   pointercancel:()=>{this.down=null;},pointerleave:()=>this.setHover(null),
+   contextmenu:e=>e.preventDefault(),wheel:e=>{e.preventDefault();this.zoomBy(-e.deltaY*.0015);}
   };
   for(const [n,f]of Object.entries(this.handlers))canvas.addEventListener(n,f,{passive:false});
   this.resize=new ResizeObserver(()=>this.fit());this.resize.observe(canvas);this.fit();
-  const loop=t=>{if(!this.running)return;if(!this.lastFrame||t-this.lastFrame>30){this.draw(t);this.lastFrame=t;}this.raf=requestAnimationFrame(loop);};this.raf=requestAnimationFrame(loop);
  }
- fit(){const rect=this.canvas.getBoundingClientRect();this.w=rect.width;this.h=rect.height;this.dpr=Math.min(window.devicePixelRatio||1,2);this.canvas.width=this.w*this.dpr;this.canvas.height=this.h*this.dpr;}
- update(options){const old=this.options.state;if(old&&options.state.ply>old.ply){const reports=options.state.history.filter(r=>r.id>old.ply);this.combat={effects:reports.flatMap(r=>r.effects),impacts:reports.flatMap(r=>r.impacts),at:performance.now()};}else if(options.state.ply===0||old&&options.state.ply<old.ply)this.combat=null;this.options=options;}
- reset(top=false){this.yaw=top?0:.68;this.pitch=top?1.48:.64;this.zoom=1;this.pan=[0,0];this.focusPoint=null;}
- focus(p){this.focusPoint=[...p];this.pan=[0,0];this.zoom=1.8;}
- rotate(n){this.yaw+=n*Math.PI/4;}
- destroy(){this.running=false;cancelAnimationFrame(this.raf);this.resize.disconnect();for(const[n,f]of Object.entries(this.handlers))this.canvas.removeEventListener(n,f);}
+ fit(){const rect=this.canvas.getBoundingClientRect();this.w=rect.width;this.h=rect.height;this.dpr=Math.min(window.devicePixelRatio||1,2);this.canvas.width=this.w*this.dpr;this.canvas.height=this.h*this.dpr;this.frames.invalidate();}
+ update(options){const old=this.options.state;if(old&&options.state.ply>old.ply){const reports=options.state.history.filter(r=>r.id>old.ply);this.combat={effects:reports.flatMap(r=>r.effects),impacts:reports.flatMap(r=>r.impacts),at:performance.now()};}else if(options.state.ply===0||old&&options.state.ply<old.ply)this.combat=null;this.options=options;this.frames.invalidate();}
+ isAnimating(time){const {state,pending}=this.options;return !!(this.combat&&(this.combat.effects.length||this.combat.impacts.length)&&time-this.combat.at<2200||state?.missiles.length||pending?.kind==='fire'&&state?.ships.find(s=>s.id===pending.id)?.type==='arsenal');}
+ setHover(hit){const identity=h=>h?`${h.id??''}:${h.role??''}:${h.terrain??''}:${h.p?.join(',')}`:'';if(identity(hit)===identity(this.hover))return;this.hover=hit;this.onHover(hit);this.frames.invalidate();}
+ reset(top=false){this.yaw=top?0:.68;this.pitch=top?1.48:.64;this.zoom=1;this.pan=[0,0];this.focusPoint=null;this.frames.invalidate();}
+ focus(p){this.focusPoint=[...p];this.pan=[0,0];this.zoom=1.8;this.frames.invalidate();}
+ rotate(n){this.yaw+=n*Math.PI/4;this.frames.invalidate();}
+ zoomBy(delta){this.zoom=Math.max(.65,Math.min(3.2,this.zoom+delta));this.frames.invalidate();}
+ destroy(){this.frames.destroy();this.resize.disconnect();for(const[n,f]of Object.entries(this.handlers))this.canvas.removeEventListener(n,f);}
  project(p){const frame=this.options.frame,span=frame?Math.max(frame.max[0]-frame.min[0]+1,frame.max[2]-frame.min[2]+1):14,center=this.focusPoint??(frame?frame.min.map((v,i)=>(v+frame.max[i])/2):[(SIZE[0]-1)/2,2,(SIZE[2]-1)/2]),x=p[0]-center[0],y=p[1]-center[1],z=p[2]-center[2],c=Math.cos(this.yaw),s=Math.sin(this.yaw),depth=x*s+z*c,scale=Math.min(this.w/(span*1.5),this.h/Math.max(10,span))*this.zoom;return {x:this.w*.5+(x*c-z*s)*scale+this.pan[0],y:this.h*.52+(depth*Math.sin(this.pitch)-y*Math.cos(this.pitch))*scale+this.pan[1],d:depth*Math.cos(this.pitch)+y*Math.sin(this.pitch)};}
  pick(x,y){for(const objectsFirst of [true,false])for(let i=this.hits.length-1;i>=0;i--){const h=this.hits[i];if(!!h.data.id===objectsFirst&&inPoly({x,y},h.poly))return h.data;}return null;}
  draw(time){

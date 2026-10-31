@@ -64,15 +64,21 @@ The fleet roster starts hidden and opens as an overlay drawer. A sticky turn bar
 
 Structured combat records contain actual HP loss, absorbed shield damage, module health before/after, destruction, shot paths and explosion coordinates. The scene renders muzzle flashes, traveling missiles, beams, blast rings, damage numbers and health changes. A persistent Recent Combat card identifies affected ships and offers camera focus. A bounded history preserves both actions for polling clients. The AI spaces actions by 2.4 seconds; a short 1.9-second presentation pause gives feedback time to read.
 
+## Performance and connection handling
+
+The canvas redraws on interaction and during combat or missile animations, then sleeps while the board is idle. Hovering within one module no longer repeats React updates. Camera buttons, drag, zoom, resizing and language changes all invalidate the view.
+
+Room polling sends the last loaded revision. Unchanged boards return only authenticated room metadata, including guest readiness; an initial-board idle response drops from 6,277 to 69 uncompressed JSON bytes. Reload always requests a full board. Requests time out after 10 seconds; failed polls back off, cancelled requests cannot restore abandoned rooms, and stale revisions are rejected. Orders are never automatically retried because a timed-out order may already have committed. Connection status remains visible in the footer.
+
 ## Development
 
-`npm run dev -- --port 5180` for local preview. `node --test tests/*.test.mjs` runs 60 tests, including a complete AI match, exhaustive endgame checks, translation coverage, real combat-message translation and preference/link persistence. `node scripts/analyze-tactics.mjs` regenerates the analysis in `research/tactical-analysis.json`; the design findings and search limits are documented in `research/README.md`. `node tests/rooms-v3.integration.mjs` verifies local D1 authentication, concurrency, reconnection, two-activation turns and combat records (set `VOIDLINE_TEST_URL` for a different local server). Run `node node_modules/typescript/bin/tsc --noEmit` for types. Sites build/source helpers package and publish the Worker and apply Drizzle migrations. This interface update preserves version 3 game and room state, so it needs no schema migration and existing v3 rooms remain usable.
+`npm run dev -- --port 5180` for local preview. `node --test tests/*.test.mjs` runs 73 tests, including a complete AI match, exhaustive endgame checks, translation coverage, real combat-message translation and preference/link persistence. `node scripts/analyze-tactics.mjs` regenerates the analysis in `research/tactical-analysis.json`; the design findings and search limits are documented in `research/README.md`. `node tests/rooms-v3.integration.mjs` verifies local D1 authentication, concurrency, reconnection, two-activation turns and combat records (set `VOIDLINE_TEST_URL` for a different local server). Run `node node_modules/typescript/bin/tsc --noEmit` for types. Sites build/source helpers package and publish the Worker and apply Drizzle migrations. This optimization preserves version 3 game and room state, so it needs no schema migration and existing v3 rooms remain usable.
 
 English messages live in `game/locales/en.json`. `Localized` translates React text nodes and accessible labels; it never changes action payloads or input values. The canvas uses the same translator. `node scripts/extract-messages.mjs list` lists source messages for translation coverage review.
 
 ## Prototype limits
 
-AI uses local heuristics rather than deep search. Balance and match duration are unproven. Room polling is 1.2 seconds; two player seats, no spectators or matchmaking. Current hosting audience is private until explicitly changed. No public contest submission has been made.
+AI uses local heuristics rather than deep search. Balance and match duration are unproven. Room polling is 1.2 seconds, backing off to 10 seconds after failures; two player seats, no spectators or matchmaking. Current hosting audience is private until explicitly changed. No public contest submission has been made.
 
 ## Attribution
 

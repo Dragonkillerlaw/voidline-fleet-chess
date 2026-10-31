@@ -584,5 +584,7 @@
   "信标": "Beacon",
   "前哨": "Outpost",
   "短剑": "Dagger",
-  "游隼": "Peregrine"
+  "游隼": "Peregrine",
+  "连接超时，请检查网络后重试。": "Connection timed out. Check your network and try again.",
+  "网络中断，请检查连接。": "Network unavailable. Please check your connection."
 }

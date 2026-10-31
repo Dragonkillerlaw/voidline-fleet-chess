@@ -1,14 +1,22 @@
 import assert from 'node:assert/strict';
 const base=process.env.VOIDLINE_TEST_URL||'http://127.0.0.1:5180';
 async function post(body,token){const r=await fetch(base+'/api/rooms',{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})},body:JSON.stringify(body)});return {status:r.status,data:await r.json()};}
-async function get(code,token){const r=await fetch(base+'/api/rooms?code='+code,{headers:token?{Authorization:`Bearer ${token}`}:{}});return {status:r.status,data:await r.json()};}
+async function get(code,token,since){const r=await fetch(base+'/api/rooms?code='+code+(since===undefined?'':'&since='+since),{headers:token?{Authorization:`Bearer ${token}`}:{}});return {status:r.status,data:await r.json()};}
 const h=await post({op:'create'});assert.equal(h.status,200,JSON.stringify(h.data));const host=h.data;assert.equal(host.state.version,3);assert.equal(host.state.actionsLeft,2);
 assert.equal((await post({op:'act',code:host.code,revision:0,action:{kind:'end_turn'}},host.token)).status,409);
+const waiting=(await get(host.code,host.token,0)).data;assert.equal(waiting.unchanged,true);assert.equal(waiting.ready,false);assert.equal(Object.hasOwn(waiting,'state'),false);
 const j=await post({op:'join',code:host.code});assert.equal(j.status,200);const guest=j.data;
 assert.equal((await post({op:'join',code:host.code})).status,409);assert.equal((await get(host.code)).status,401);assert.equal((await get(host.code,'invalid')).status,403);
+const joined=(await get(host.code,host.token,0)).data;assert.equal(joined.unchanged,true);assert.equal(joined.ready,true);assert.equal(joined.revision,0);
+assert.equal((await get(host.code,undefined,0)).status,401);assert.equal((await get(host.code,'invalid',0)).status,403);
+assert.equal((await post([])).status,400);
+const full=(await get(host.code,host.token)).data;assert.deepEqual(full.state,host.state);
+console.log(`Idle poll response: ${Buffer.byteLength(JSON.stringify(full))} -> ${Buffer.byteLength(JSON.stringify(joined))} bytes (uncompressed JSON).`);
 let revision=0,state=host.state;
 async function order(action){const r=await post({op:'act',code:host.code,revision,action},state.turn?guest.token:host.token);assert.equal(r.status,200,JSON.stringify(r.data));revision++;state=r.data.state;return state;}
 await order({kind:'move',id:'0-7',to:[7,0,3]});assert.equal(state.turn,0);assert.equal(state.actionsLeft,1);
+assert.deepEqual((await get(host.code,guest.token,0)).data.state,state);
+assert.equal((await get(host.code,guest.token,revision)).data.unchanged,true);
 assert.equal((await post({op:'act',code:host.code,revision,action:{kind:'end_turn'}},guest.token)).status,400);
 assert.equal((await post({op:'act',code:host.code,revision,action:{kind:'move',id:'0-7',to:[6,0,3]}},host.token)).status,400);
 assert.deepEqual((await get(host.code,guest.token)).data.state,state);

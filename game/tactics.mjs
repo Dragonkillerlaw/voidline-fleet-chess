@@ -1,4 +1,4 @@
-import {TYPES,DIR_NAMES,available,alive,cells,moves,targets,canCharge,canRotate,groupMove,validAction,applyAction,coord,trace,beam,shieldAt} from './engine.mjs';
+import {TYPES,DIR_NAMES,available,alive,cells,moves,targets,canCharge,canRotate,groupMove,validAction,applyAction,coord,trace,beam,shieldAt,cannonShots,charged} from './engine.mjs';
 
 // Enumerate legal choices, not just the moves preferred by the heuristic AI.
 // Resignation is omitted because it cannot satisfy a winning/survival objective.
@@ -9,7 +9,7 @@ export function legalActions(s){
   for(const to of moves(s,ship))out.push({kind:'move',id:ship.id,to});
   for(let dir=0;dir<6;dir++)if(canRotate(s,ship,dir))out.push({kind:'rotate',id:ship.id,dir});
   if(canCharge(ship))out.push({kind:'charge',id:ship.id});
-  if(ship.type==='flag'){const a={kind:'fire',id:ship.id};if(!validAction(s,a))out.push(a);}
+  if(ship.type==='flag'&&charged(s,ship)){for(const shot of cannonShots(s,ship)){const a={kind:'fire',id:ship.id,target:shot.target};if(!validAction(s,a))out.push(a);}}
   else for(const target of targets(s,ship))out.push({kind:'fire',id:ship.id,target});
   const reload={kind:'reload',id:ship.id};if(!validAction(s,reload))out.push(reload);
   if(ship.type==='command')for(const type of ['fighter','corvette'])for(let dir=0;dir<6;dir++)for(let steps=1;steps<=TYPES[type].speed;steps++)if(groupMove(s,ship,type,dir,steps).ok)out.push({kind:'group',id:ship.id,type,dir,steps});
@@ -22,7 +22,7 @@ export function defenderReply(s,goal){
   if(state.winner!==null||state.turn!==defender)return {success:goal(state),state,path};
   let first;
   // Prefer a concrete attacking refutation to a harmless early pass when both refute the goal.
-  const rank=a=>a.kind==='fire'?0:a.kind==='end_turn'?2:1;
+  const rank=a=>{if(a.kind!=='fire')return a.kind==='end_turn'?3:2;const ship=state.ships.find(u=>u.id===a.id);return ship.type==='flag'&&beam(state,ship,a.target).hits.some(h=>h.ship.team!==defender&&h.ship.type==='flag'&&h.part.role==='core')?-1:0;};
   for(const action of legalActions(state).sort((a,b)=>rank(a)-rank(b))){const r=visit(quickStep(state,action),[...path,action]);first??=r;if(!r.success)return r;}
   return first??{success:goal(state),state,path};
  }return visit(s,[]);
@@ -54,5 +54,5 @@ export function openingFacts(s,team=0){
  const protectedCores=own.filter(u=>shieldAt(s,team,u.p)).map(u=>u.id);
  const readyGunThreats=own.filter(u=>enemy.some(e=>e.type!=='arsenal'&&trace(s,e,u.p).ok)).map(u=>u.id);
  const flag=own.find(u=>u.type==='flag');
- return {inMissileRange,protectedCores,readyGunThreats,flagBeamEnemyModules:beam(s,flag).hits.filter(h=>h.ship.team!==team&&alive(h.ship)).length};
+ return {inMissileRange,protectedCores,readyGunThreats,flagBeamEnemyModules:Math.max(0,...cannonShots(s,flag).map(b=>b.hits.filter(h=>h.ship.team!==team&&alive(h.ship)).length))};
 }

@@ -1,5 +1,5 @@
 {
-  "scope": "Exhaustive legal actions within the stated one-turn puzzle horizon; full opponent reply for delayed-win puzzle. Opening plans are examples, not proven optimal.",
+  "scope": "All distinct resulting states within the stated one-turn puzzle horizon; cannon rays with identical ordered module hits share a representative; full opponent reply for delayed-win puzzle. Opening plans are examples, not proven optimal.",
   "puzzles": [
     {
       "id": "mate-focus",
@@ -70,27 +70,66 @@
     },
     {
       "id": "mate-shield",
-      "nodes": 462,
-      "solutions": 1,
+      "nodes": 483,
+      "solutions": 2,
       "firstActions": [
         {
           "kind": "fire",
-          "id": "0-0"
+          "id": "0-0",
+          "target": [
+            0,
+            0,
+            12
+          ]
+        },
+        {
+          "kind": "fire",
+          "id": "0-0",
+          "target": [
+            5,
+            1,
+            11
+          ]
         }
       ],
       "examples": [
         [
           {
             "kind": "fire",
-            "id": "0-0"
+            "id": "0-0",
+            "target": [
+              0,
+              0,
+              12
+            ]
           },
           {
             "kind": "fire",
             "id": "0-1",
             "target": [
-              8,
+              9,
               3,
-              8
+              5
+            ]
+          }
+        ],
+        [
+          {
+            "kind": "fire",
+            "id": "0-0",
+            "target": [
+              5,
+              1,
+              11
+            ]
+          },
+          {
+            "kind": "fire",
+            "id": "0-1",
+            "target": [
+              9,
+              3,
+              5
             ]
           }
         ]
@@ -98,7 +137,7 @@
     },
     {
       "id": "mate-clear",
-      "nodes": 375,
+      "nodes": 568,
       "solutions": 13,
       "firstActions": [
         {
@@ -232,7 +271,12 @@
           },
           {
             "kind": "fire",
-            "id": "0-0"
+            "id": "0-0",
+            "target": [
+              6,
+              2,
+              5
+            ]
           }
         ],
         [
@@ -247,7 +291,12 @@
           },
           {
             "kind": "fire",
-            "id": "0-0"
+            "id": "0-0",
+            "target": [
+              6,
+              2,
+              5
+            ]
           }
         ],
         [
@@ -262,7 +311,12 @@
           },
           {
             "kind": "fire",
-            "id": "0-0"
+            "id": "0-0",
+            "target": [
+              6,
+              2,
+              5
+            ]
           }
         ],
         [
@@ -277,7 +331,12 @@
           },
           {
             "kind": "fire",
-            "id": "0-0"
+            "id": "0-0",
+            "target": [
+              6,
+              2,
+              5
+            ]
           }
         ],
         [
@@ -292,7 +351,12 @@
           },
           {
             "kind": "fire",
-            "id": "0-0"
+            "id": "0-0",
+            "target": [
+              6,
+              2,
+              5
+            ]
           }
         ],
         [
@@ -307,7 +371,12 @@
           },
           {
             "kind": "fire",
-            "id": "0-0"
+            "id": "0-0",
+            "target": [
+              6,
+              2,
+              5
+            ]
           }
         ],
         [
@@ -322,7 +391,12 @@
           },
           {
             "kind": "fire",
-            "id": "0-0"
+            "id": "0-0",
+            "target": [
+              6,
+              2,
+              5
+            ]
           }
         ],
         [
@@ -337,7 +411,12 @@
           },
           {
             "kind": "fire",
-            "id": "0-0"
+            "id": "0-0",
+            "target": [
+              6,
+              2,
+              5
+            ]
           }
         ]
       ]
@@ -345,44 +424,8 @@
     {
       "id": "mate-delay",
       "nodes": 48311,
-      "solutions": 10,
+      "solutions": 2,
       "firstActions": [
-        {
-          "kind": "move",
-          "id": "0-0",
-          "to": [
-            7,
-            2,
-            2
-          ]
-        },
-        {
-          "kind": "move",
-          "id": "0-0",
-          "to": [
-            5,
-            2,
-            2
-          ]
-        },
-        {
-          "kind": "move",
-          "id": "0-0",
-          "to": [
-            6,
-            3,
-            2
-          ]
-        },
-        {
-          "kind": "move",
-          "id": "0-0",
-          "to": [
-            6,
-            1,
-            2
-          ]
-        },
         {
           "kind": "fire",
           "id": "0-1",
@@ -403,86 +446,6 @@
         }
       ],
       "examples": [
-        [
-          {
-            "kind": "move",
-            "id": "0-0",
-            "to": [
-              7,
-              2,
-              2
-            ]
-          },
-          {
-            "kind": "fire",
-            "id": "0-2",
-            "target": [
-              6,
-              2,
-              10
-            ]
-          }
-        ],
-        [
-          {
-            "kind": "move",
-            "id": "0-0",
-            "to": [
-              5,
-              2,
-              2
-            ]
-          },
-          {
-            "kind": "fire",
-            "id": "0-2",
-            "target": [
-              6,
-              2,
-              10
-            ]
-          }
-        ],
-        [
-          {
-            "kind": "move",
-            "id": "0-0",
-            "to": [
-              6,
-              3,
-              2
-            ]
-          },
-          {
-            "kind": "fire",
-            "id": "0-2",
-            "target": [
-              6,
-              2,
-              10
-            ]
-          }
-        ],
-        [
-          {
-            "kind": "move",
-            "id": "0-0",
-            "to": [
-              6,
-              1,
-              2
-            ]
-          },
-          {
-            "kind": "fire",
-            "id": "0-2",
-            "target": [
-              6,
-              2,
-              10
-            ]
-          }
-        ],
         [
           {
             "kind": "fire",
@@ -514,52 +477,12 @@
             ]
           },
           {
-            "kind": "move",
-            "id": "0-0",
-            "to": [
-              7,
-              2,
-              2
-            ]
-          }
-        ],
-        [
-          {
             "kind": "fire",
-            "id": "0-2",
+            "id": "0-1",
             "target": [
               6,
               2,
-              10
-            ]
-          },
-          {
-            "kind": "move",
-            "id": "0-0",
-            "to": [
-              5,
-              2,
-              2
-            ]
-          }
-        ],
-        [
-          {
-            "kind": "fire",
-            "id": "0-2",
-            "target": [
-              6,
-              2,
-              10
-            ]
-          },
-          {
-            "kind": "move",
-            "id": "0-0",
-            "to": [
-              6,
-              3,
-              2
+              8
             ]
           }
         ]
@@ -577,7 +500,7 @@
           "0-2"
         ],
         "readyGunThreats": [],
-        "flagBeamEnemyModules": 0
+        "flagBeamEnemyModules": 5
       },
       "afterOwnTurn": {
         "inMissileRange": [
@@ -590,7 +513,7 @@
           "0-6"
         ],
         "readyGunThreats": [],
-        "flagBeamEnemyModules": 0
+        "flagBeamEnemyModules": 5
       },
       "afterReply": {
         "inMissileRange": [
@@ -605,7 +528,7 @@
         "readyGunThreats": [
           "0-9"
         ],
-        "flagBeamEnemyModules": 0
+        "flagBeamEnemyModules": 5
       }
     },
     {
@@ -618,7 +541,7 @@
           "0-2"
         ],
         "readyGunThreats": [],
-        "flagBeamEnemyModules": 0
+        "flagBeamEnemyModules": 5
       },
       "afterOwnTurn": {
         "inMissileRange": [
@@ -628,7 +551,7 @@
           "0-2"
         ],
         "readyGunThreats": [],
-        "flagBeamEnemyModules": 0
+        "flagBeamEnemyModules": 5
       },
       "afterReply": {
         "inMissileRange": [
@@ -638,7 +561,7 @@
           "0-2"
         ],
         "readyGunThreats": [],
-        "flagBeamEnemyModules": 0
+        "flagBeamEnemyModules": 5
       }
     },
     {
@@ -651,7 +574,7 @@
           "0-2"
         ],
         "readyGunThreats": [],
-        "flagBeamEnemyModules": 0
+        "flagBeamEnemyModules": 5
       },
       "afterOwnTurn": {
         "inMissileRange": [],
@@ -659,7 +582,7 @@
           "0-2"
         ],
         "readyGunThreats": [],
-        "flagBeamEnemyModules": 0
+        "flagBeamEnemyModules": 5
       },
       "afterReply": {
         "inMissileRange": [],
@@ -667,7 +590,7 @@
           "0-2"
         ],
         "readyGunThreats": [],
-        "flagBeamEnemyModules": 0
+        "flagBeamEnemyModules": 5
       }
     }
   ]

@@ -1,4 +1,4 @@
-# VOIDLINE / 深空舰队棋 · Player Deck 05
+# VOIDLINE / 深空舰队棋 · Tactical Academy · Rules v4
 
 A playable 3D fleet tactics prototype. Original procedural ship geometry and low-poly asteroid art; no downloaded art or third-party IP. Rendering uses a rotatable orthographic 3D projection with per-face depth sorting on Canvas 2D. Game coordinates and combat are fully three dimensional.
 
@@ -31,12 +31,22 @@ npm run build
 
 - The homepage is a player command deck: edit your local callsign, continue the next unfinished exercise, see real lesson/puzzle progress, or choose AI, local two-player or online rooms. Profile and progress are saved on this device, not in a cloud account.
 - Switch between Chinese and English in the header. `/?lang=en` opens the English version; language is remembered and carried through internal links and room invitations. Training, hints, opening explanations, commands, combat feedback, canvas labels and errors are translated. Switching language preserves the current game and pending action. Shared rules, game IDs and room state remain unchanged.
-- `/academy` opens four interactive lessons, three opening walkthroughs and four endgame puzzles. Hints, undo, retry, demonstrations and browser-local progress are supported; demonstrations do not count as completion. Link directly with `/academy?study=two-ships` or `/academy?tab=puzzle`. `/play?mode=ai`, `local` or `online` selects a game entry; original `/?room=` invitation links still work.
+- `/academy` opens six ship-skill lessons, four fleet-combination lessons, four endgame puzzles and three opening walkthroughs. Hints, undo, retry, demonstrations and browser-local progress are supported; demonstrations do not count as completion. Link directly with `/academy?study=firing-square` or `/academy?tab=puzzle`. `/play?mode=ai`, `local` or `online` selects a game entry; original `/?room=` invitation links still work.
 - Opening walkthroughs show a legal plan, one illustrative opponent response, the tradeoff, and live range/shield facts. Continue the resulting position against AI using `/play?opening=escort` (or `flanks`, `reserve`). They are not claims of optimal play.
 - AI exercise: human blue, deterministic heuristic AI orange.
 - Same-device two-player: alternate full turns on one screen, with two different ship activations each.
 - Online rooms: create or join with a six-character code. Server validates every action, hashes seat credentials, and atomically advances the version. Browser session storage preserves a seat across reloads. Rooms expire after seven days.
 - Select a ship, choose Move / Rotate / Attack / Ability, preview, then confirm. M / R / F / S select actions; 1–6 change altitude; Enter confirms; Escape cancels. Movement controls include a distance selector. Drag to orbit, Shift/right-drag to pan, scroll to zoom. Focus centers the selected ship; Full Map resets the view. Slice isolates one altitude.
+
+## Progressive training
+
+Start with individual ship skills, then combine them:
+
+- Ship skills (6): firing squares, off-axis cannon aiming, escaping cannon coverage, shield counterattacks, dodging missile splash, and group evasion.
+- Fleet combinations (4): focus fire, bringing shields to a firing position, disabling a dangerous gun, and driving a target from a missile into a charged cannon.
+- Endgames (4): focus finish, remove the shield before the finisher, clear friendly ships from the beam, and survive until a delayed lethal missile lands.
+
+Every exercise supports hints, undo, restart and step-by-step demonstration in Chinese and English. Two shield exercises explicitly use a fixed counterattack to teach the mechanic. Cannon denial and the missile trap check every distinct legal defensive outcome; endgame validation uses the real rules rather than an exact answer list. The shield and missile lessons can span multiple turns. Progress totals are derived from the curriculum.
 
 ## Rules
 
@@ -46,7 +56,7 @@ Translation is axis-aligned and the complete hull must clear each intermediate v
 
 | Unit | Hull | Move | Weapon / role |
 | --- | --- | --- | --- |
-| Mothership | 5 cells | 1 | Spend an action charging; on the next own turn, fire a forward beam up to 14 cells. Each hit module takes 4 damage. Penetrates hulls, wrecks, friends and nebula; rocks stop the beam. Moving/turning cancels charge. |
+| Mothership | 5 cells | 1 | Spend an action charging; on the next own turn, aim one straight ray within a 45° half-angle cone around the bow, up to Euclidean distance 14 from the muzzle. Each hit module takes 4 damage. Penetrates hulls, wrecks, friends and nebula; rocks stop the beam. Moving/turning cancels charge. |
 | Fighter | 1 | 4 | Range 2, damage 1. |
 | Corvette | 2 | 3 | Range 3, damage 1. |
 | Arsenal | 3 | 1 | Manhattan range 10, coordinate missile at the end of the opponent's full turn. Center damage 3, six adjacent voxels 1. Four rounds; reload takes an action. |
@@ -70,9 +80,11 @@ The canvas redraws on interaction and during combat or missile animations, then 
 
 Room polling sends the last loaded revision. Unchanged boards return only authenticated room metadata, including guest readiness; an initial-board idle response drops from 6,277 to 69 uncompressed JSON bytes. Reload always requests a full board. Requests time out after 10 seconds; failed polls back off, cancelled requests cannot restore abandoned rooms, and stale revisions are rejected. Orders are never automatically retried because a timed-out order may already have committed. Connection status remains visible in the footer.
 
+Cannon aiming uses target-cell centers within the cone; the shot traverses every voxel interior it crosses and continues beyond the selected target. Touching only a voxel edge or corner does not hit it. The UI shades coverage on the current altitude and previews the actual ray, including friendly fire. AI and tactical search use the same aimed shots. Cached ray geometry is bounded and never retains mutable hull or terrain state.
+
 ## Development
 
-`npm run dev -- --port 5180` for local preview. `node --test tests/*.test.mjs` runs 73 tests, including a complete AI match, exhaustive endgame checks, translation coverage, real combat-message translation and preference/link persistence. `node scripts/analyze-tactics.mjs` regenerates the analysis in `research/tactical-analysis.json`; the design findings and search limits are documented in `research/README.md`. `node tests/rooms-v3.integration.mjs` verifies local D1 authentication, concurrency, reconnection, two-activation turns and combat records (set `VOIDLINE_TEST_URL` for a different local server). Run `node node_modules/typescript/bin/tsc --noEmit` for types. Sites build/source helpers package and publish the Worker and apply Drizzle migrations. This optimization preserves version 3 game and room state, so it needs no schema migration and existing v3 rooms remain usable.
+`npm run dev -- --port 5180` for local preview. `node --test tests/*.test.mjs` runs 96 tests, including a complete AI match, exhaustive endgame checks, translation coverage, real combat-message translation and preference/link persistence. `node scripts/analyze-tactics.mjs` regenerates the analysis in `research/tactical-analysis.json`; the design findings and search limits are documented in `research/README.md`. `node tests/rooms-v3.integration.mjs` verifies local D1 authentication, concurrency, reconnection, two-activation turns and combat records (set `VOIDLINE_TEST_URL` for a different local server). Run `node node_modules/typescript/bin/tsc --noEmit` for types. Sites build/source helpers package and publish the Worker and apply Drizzle migrations. This release uses rules version 4. Existing v3 rooms are retained but cannot be continued under the changed cannon rules; create a new room. No database schema migration is needed.
 
 English messages live in `game/locales/en.json`. `Localized` translates React text nodes and accessible labels; it never changes action payloads or input values. The canvas uses the same translator. `node scripts/extract-messages.mjs list` lists source messages for translation coverage review.
 

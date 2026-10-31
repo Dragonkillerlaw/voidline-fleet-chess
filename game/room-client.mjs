@@ -1,4 +1,4 @@
-export const ROOM_SESSION = 'voidline-room-v3';
+export const ROOM_SESSION = 'voidline-room-v4';
 
 export function restoreSeat(raw) {
  try {

@@ -1,6 +1,6 @@
 import {translate} from './i18n.mjs';
 import {FrameLoop} from './frame-loop.mjs';
-import {SIZE,cells,alive,DIRS,TYPES,add,mul,eq,key,coord,at,trace,inside,beam,charged,shieldActive,groupMove,hasActed} from './engine.mjs';
+import {SIZE,cells,alive,DIRS,TYPES,add,mul,eq,key,coord,at,trace,inside,beam,charged,shieldActive,groupMove,hasActed,cannonCoverage,weaponReady} from './engine.mjs';
 const BLUE='#77dcf4',ORANGE='#ff9c75';
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 function inPoly(p,poly){let ok=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)ok=!ok;}return ok;}
@@ -19,7 +19,7 @@ export class FleetScene{
   this.resize=new ResizeObserver(()=>this.fit());this.resize.observe(canvas);this.fit();
  }
  fit(){const rect=this.canvas.getBoundingClientRect();this.w=rect.width;this.h=rect.height;this.dpr=Math.min(window.devicePixelRatio||1,2);this.canvas.width=this.w*this.dpr;this.canvas.height=this.h*this.dpr;this.frames.invalidate();}
- update(options){const old=this.options.state;if(old&&options.state.ply>old.ply){const reports=options.state.history.filter(r=>r.id>old.ply);this.combat={effects:reports.flatMap(r=>r.effects),impacts:reports.flatMap(r=>r.impacts),at:performance.now()};}else if(options.state.ply===0||old&&options.state.ply<old.ply)this.combat=null;this.options=options;this.frames.invalidate();}
+ update(options){const old=this.options.state;if(old&&options.state.ply>old.ply){const reports=options.state.history.filter(r=>r.id>old.ply);this.combat={effects:reports.flatMap(r=>r.effects),impacts:reports.flatMap(r=>r.impacts),at:performance.now()};}else if(options.state.ply===0||old&&options.state.ply<old.ply)this.combat=null;if(old!==options.state||this.options.selected!==options.selected||this.options.mode!==options.mode){this.sectors=options.state.ships.filter(s=>s.type==='flag'&&weaponReady(s)&&!(options.hiddenIds??[]).includes(s.id)&&(s.charge||s.id===options.selected&&options.mode==='fire')).map(ship=>({ship,keys:new Set(cannonCoverage(options.state,ship).map(key))}));}this.options=options;this.frames.invalidate();}
  isAnimating(time){const {state,pending}=this.options;return !!(this.combat&&(this.combat.effects.length||this.combat.impacts.length)&&time-this.combat.at<2200||state?.missiles.length||pending?.kind==='fire'&&state?.ships.find(s=>s.id===pending.id)?.type==='arsenal');}
  setHover(hit){const identity=h=>h?`${h.id??''}:${h.role??''}:${h.terrain??''}:${h.p?.join(',')}`:'';if(identity(hit)===identity(this.hover))return;this.hover=hit;this.onHover(hit);this.frames.invalidate();}
  reset(top=false){this.yaw=top?0:.68;this.pitch=top?1.48:.64;this.zoom=1;this.pan=[0,0];this.focusPoint=null;this.frames.invalidate();}
@@ -44,7 +44,7 @@ export class FleetScene{
   for(let z=lo[2];z<=hi[2]+1;z++)line([lo[0]-.5,-.5,z-.5],[hi[0]+.5,-.5,z-.5],'rgba(112,161,192,.15)');
   for(const x of[lo[0]-.5,hi[0]+.5])for(const z of[lo[2]-.5,hi[2]+.5]){line([x,-.5,z],[x,SIZE[1]-.5,z],'rgba(112,161,192,.2)',1,[3,5]);for(let y=0;y<SIZE[1];y++){const p=this.project([x,y,z]);c.fillStyle='rgba(165,199,215,.4)';c.fillRect(p.x-2,p.y-1,4,2);}}
   const destKeys=new Set(destinations.map(key));
-  for(let x=lo[0];x<=hi[0];x++)for(let z=lo[2];z<=hi[2];z++){const p=[x,layer,z],legal=destKeys.has(key(p));tile(p,legal?(mode==='fire'?'rgba(249,155,104,.16)':'rgba(108,219,226,.14)'):((x+z)%2?'rgba(70,134,161,.025)':'rgba(70,134,161,.045)'),legal?(mode==='fire'?'#a26745':'#387f8a'):'rgba(119,183,212,.12)',{p});}
+  for(let x=lo[0];x<=hi[0];x++)for(let z=lo[2];z<=hi[2];z++){const p=[x,layer,z],legal=destKeys.has(key(p)),danger=this.sectors?.some(zone=>zone.keys.has(key(p)));tile(p,legal?(mode==='fire'?'rgba(249,155,104,.16)':'rgba(108,219,226,.14)'):danger?'rgba(246,148,105,.12)':((x+z)%2?'rgba(70,134,161,.025)':'rgba(70,134,161,.045)'),legal?(mode==='fire'?'#a26745':'#387f8a'):danger?'rgba(246,148,105,.22)':'rgba(119,183,212,.12)',{p});}
   for(let i=lo[0];i<=hi[0];i++)labels.push({p:[i,-.5,lo[2]-.85],text:String.fromCharCode(65+i),color:'#6b8da5',size:10});
   for(let i=lo[2];i<=hi[2];i++)labels.push({p:[lo[0]-.9,-.5,i],text:String(i+1),color:'#6b8da5',size:10});
   for(const p of state.nebula){if(slice&&p[1]!==layer)continue;cube(p,.44,['rgba(128,99,189,.12)','rgba(158,123,204,.13)','rgba(118,93,169,.18)'],{p,terrain:'nebula'});const q=this.project(p);labels.push({p,text:'⋆',color:'#c3a3ef',size:21});}
@@ -80,8 +80,8 @@ export class FleetScene{
   for(const p of destinations.filter(p=>p[1]!==layer)){if(mode==='fire')continue;const q=this.project(p);c.strokeStyle='#6edbe5';c.fillStyle='#102f3f';c.beginPath();c.arc(q.x,q.y,8,0,Math.PI*2);c.fill();c.stroke();c.fillStyle=BLUE;c.font='11px monospace';c.textAlign='center';c.fillText(p[1]>layer?'↑':'↓',q.x,q.y+4);this.hits.push({poly:[{x:q.x-10,y:q.y-10},{x:q.x+10,y:q.y-10},{x:q.x+10,y:q.y+10},{x:q.x-10,y:q.y+10}],data:{p}});}
   for(const m of [...state.missiles,...(pending?.kind==='fire'&&state.ships.find(x=>x.id===pending.id)?.type==='arsenal'?[{target:pending.target}]:[])]){const q=this.project(m.target);c.strokeStyle='#ffab67';c.lineWidth=1.6;c.beginPath();c.arc(q.x,q.y,13+Math.sin(time*.004)*2,0,Math.PI*2);c.moveTo(q.x-20,q.y);c.lineTo(q.x+20,q.y);c.moveTo(q.x,q.y-20);c.lineTo(q.x,q.y+20);c.stroke();labels.push({p:add(m.target,[0,.65,0]),text:'IMPACT · 1',color:'#ffab67',size:10});}
   const chosen=state.ships.find(x=>x.id===selected),target=pending?.target??(mode==='fire'?this.hover?.p:null);
-  if(chosen&&target&&mode==='fire'){const t=trace(state,chosen,target);for(let i=1;i<t.path.length;i++)line(t.path[i-1],t.path[i],t.ok?'#ffbb78':'#e57c72',2,[5,4]);}
-  for(const flag of state.ships.filter(s=>alive(s)&&s.type==='flag'&&(s.charge||s.id===selected&&mode==='fire'))){const b=beam(state,flag);for(let i=1;i<b.path.length;i++)line(b.path[i-1],b.path[i],flag.charge?'#ffcf7ccc':'#f6b46d66',flag.charge?2:1,[5,5]);if(flag.charge)labels.push({p:add(flag.p,[0,.9,0]),text:charged(state,flag)?'主炮就绪':'蓄力中',color:'#ffe7a7',size:11});}
+  if(chosen&&target&&mode==='fire'){const t=trace(state,chosen,target),path=t.ray??t.path;for(let i=1;i<path.length;i++)line(path[i-1],path[i],t.ok?'#ffbb78':'#e57c72',2,[5,4]);}
+  for(const flag of state.ships.filter(s=>alive(s)&&s.type==='flag'&&(s.charge||s.id===selected&&mode==='fire'))){const b=beam(state,flag,flag.id===selected?pending?.target:null);for(let i=1;i<b.ray.length;i++)line(b.ray[i-1],b.ray[i],flag.charge?'#ffcf7ccc':'#f6b46d66',flag.charge?2:1,[5,5]);if(flag.charge)labels.push({p:add(flag.p,[0,.9,0]),text:charged(state,flag)?'主炮就绪':'蓄力中',color:'#ffe7a7',size:11});}
   for(const guard of state.ships.filter(shieldActive)){if(guard.id!==selected)continue;const tips=DIRS.map(d=>add(guard.p,mul(d,2)));for(let i=0;i<6;i++)for(let j=i+1;j<6;j++)if(Math.floor(i/2)!==Math.floor(j/2))line(tips[i],tips[j],'#7ad8da88',1,[3,3]);labels.push({p:add(guard.p,[0,.9,0]),text:`护盾 ${guard.shield}/3`,color:'#9ee9e7',size:11});}
   if(this.combat&&time-this.combat.at<2200){
    const age=time-this.combat.at,fade=Math.min(1,(2200-age)/650);

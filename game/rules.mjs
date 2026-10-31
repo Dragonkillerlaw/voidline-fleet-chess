@@ -1,7 +1,7 @@
-export const VERSION=3, SIZE=[14,6,14], MAX_UNITS=18, PRODUCTION_TURNS=4, MAX_TURNS=480, ACTIONS_PER_TURN=2;
+export const VERSION=4, SIZE=[14,6,14], MAX_UNITS=18, PRODUCTION_TURNS=4, MAX_TURNS=480, ACTIONS_PER_TURN=2;
 export const DIRS=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]],DIR_NAMES=['东 +X','西 −X','上升 +Y','下降 −Y','北 +Z','南 −Z'];
 export const TYPES={
- flag:{name:'方舟 / 母舰',short:'母舰',speed:1,range:14,length:5,damage:4,weapon:'蓄力贯穿炮',description:'唯一主力舰。先蓄力，下个己方回合可沿舰首发射贯穿射线。移动或转向会取消蓄力。'},
+ flag:{name:'方舟 / 母舰',short:'母舰',speed:1,range:14,length:5,damage:4,weapon:'蓄力贯穿炮',description:'唯一主力舰。先蓄力，下个己方回合可在舰首前方 45°空间锥内选择一条贯穿射线。移动或转向会取消蓄力。'},
  arsenal:{name:'暴雨 / 武库舰',short:'武库舰',speed:1,range:10,length:3,damage:3,weapon:'定点导弹',description:'越过障碍锁定空间坐标。对手回合结束后引爆；中心伤害 3，六邻格伤害 1。四发备弹，可花一次行动装填。'},
  aegis:{name:'穹顶 / 神盾舰',short:'神盾舰',speed:2,range:2,length:2,damage:1,weapon:'近程防御炮',description:'为核心周围曼哈顿距离 2 内的友军舱段吸收伤害。共享护盾池 3 点，每次己方回合开始恢复。'},
  command:{name:'信标 / 指挥舰',short:'指挥舰',speed:2,range:2,length:2,damage:1,weapon:'近程防御炮',description:'用一次行动让全场所有己方攻击艇或护卫舰同向同步移动。任何一艘受阻，整个指令不可执行。'},
@@ -40,11 +40,59 @@ export const charged=(s,ship)=>!!ship.charge&&s.turnIndex>=ship.charge.due;
 export const hasActed=(s,ship)=>s.acted.includes(typeof ship==='string'?ship:ship.id);
 export const available=(s,ship)=>alive(ship)&&ship.team===s.turn&&ship.type!=='station'&&!hasActed(s,ship);
 export const canCharge=ship=>ship.type==='flag'&&weaponReady(ship)&&!ship.charge&&!ship.parts.some(p=>p.role==='capacitor'&&p.hp===0);
-export function beam(s,ship){const start=cells(ship).find(c=>c.part.role==='weapon')?.p??ship.p,path=[start],hits=[];for(let n=1;n<=TYPES[ship.type].range;n++){const p=add(start,mul(DIRS[ship.dir],n));if(!inside(p))break;if(rockAt(s,p))return {path,hits,blocked:p};path.push(p);const hit=at(s,p,ship.id);if(hit)hits.push({...hit,p});}return {path,hits,blocked:null};}
+export const muzzle=ship=>cells(ship).find(c=>c.part.role==='weapon')?.p??ship.p;
+export function inCannonArc(ship,target){
+ if(!inside(target))return false;
+ const delta=target.map((v,i)=>v-muzzle(ship)[i]),forward=delta.reduce((n,v,i)=>n+v*DIRS[ship.dir][i],0),squared=delta.reduce((n,v)=>n+v*v,0);
+ return forward>0&&2*forward*forward>=squared&&squared<=TYPES.flag.range**2;
+}
+function beamBoard(s){return {rocks:new Set(s.rocks.map(key)),hulls:new Map(s.ships.flatMap(ship=>cells(ship).map(c=>[key(c.p),{ship,part:c.part}])))};}
+// Voxel traversal follows the actual straight ray. A corner/edge touch alone is
+// not a hit: tied boundary crossings advance all tied axes together.
+export function beam(s,ship,target=null,board=beamBoard(s)){
+ const start=muzzle(ship),path=[start],hits=[],delta=target?target.map((v,i)=>v-start[i]):DIRS[ship.dir];
+ if(target&&!inCannonArc(ship,target))return {ok:false,path,ray:[start,start],hits,blocked:null};
+ const length=Math.hypot(...delta),direction=delta.map(v=>v/length),step=direction.map(Math.sign),stride=direction.map(v=>v?1/Math.abs(v):Infinity),next=stride.map(v=>v/2);
+ let p=[...start],end=TYPES.flag.range,blocked=null;
+ for(;;){const distance=Math.min(...next);if(distance>end)break;
+  p=p.map((v,i)=>next[i]<=distance+1e-9?v+step[i]:v);
+  for(let i=0;i<3;i++)if(next[i]<=distance+1e-9)next[i]+=stride[i];
+  if(!inside(p)){end=distance;break;}
+  if(board.rocks.has(key(p))){blocked=p;end=distance;break;}
+  path.push(p);const hit=board.hulls.get(key(p));if(hit&&hit.ship.id!==ship.id)hits.push({...hit,p});
+ }
+ const ray=Array.from({length:Math.ceil(end)},(_,n)=>add(start,mul(direction,n)));ray.push(add(start,mul(direction,end)));
+ return {ok:target?path.slice(1).some(p=>eq(p,target)):path.length>1,path,ray,hits,blocked};
+}
+const cannonGeometryCache=new Map();
+function cannonRays(s,ship){
+ const cacheKey=key(muzzle(ship))+':'+ship.dir;
+ let geometry=cannonGeometryCache.get(cacheKey);
+ if(!geometry){
+  geometry=[];const empty={rocks:new Set(),hulls:new Map()};
+  for(let x=0;x<SIZE[0];x++)for(let y=0;y<SIZE[1];y++)for(let z=0;z<SIZE[2];z++){
+   const target=[x,y,z];if(!inCannonArc(ship,target))continue;
+   const shot=beam(s,ship,target,empty);geometry.push({target,...shot,keys:shot.path.slice(1).map(key)});
+  }
+  // Cache geometry only, never mutable ships or terrain. Bound memory during play.
+  if(cannonGeometryCache.size>=16)cannonGeometryCache.delete(cannonGeometryCache.keys().next().value);
+  cannonGeometryCache.set(cacheKey,geometry);
+ }
+ const board=beamBoard(s),rays=[];
+ for(const g of geometry){
+  if(g.keys.some(k=>board.rocks.has(k))){const shot=beam(s,ship,g.target,board);if(shot.ok)rays.push({target:g.target,...shot});}
+  else {const hits=[];g.keys.forEach((k,i)=>{const hit=board.hulls.get(k);if(hit&&hit.ship.id!==ship.id)hits.push({...hit,p:g.path[i+1]});});rays.push({...g,hits});}
+ }return rays;
+}
+export const cannonTargets=(s,ship)=>cannonRays(s,ship).map(r=>r.target);
+export const cannonCoverage=(s,ship)=>[...new Map(cannonRays(s,ship).flatMap(r=>r.path.slice(1).map(p=>[key(p),p]))).values()];
+// Equivalent rays hit the same ordered modules, hence produce the same game
+// state (including shield depletion). Search one representative of each outcome.
+export function cannonShots(s,ship){const choices=new Map();for(const shot of cannonRays(s,ship)){const signature=shot.hits.map(h=>`${h.ship.id}:${h.part.role}`).join('|');if(!choices.has(signature))choices.set(signature,shot);}return [...choices.values()];}
 export function trace(s,ship,target){
  if(!weaponReady(ship)||!inside(target))return {ok:false,path:[],reason:'武器不可用'};
  if(ship.type==='arsenal')return {ok:distance(ship.p,target)<=TYPES.arsenal.range&&!rockAt(s,target),path:[ship.p,target],reason:'超出射程或落点为小行星'};
- if(ship.type==='flag'){const b=beam(s,ship);return {...b,ok:charged(s,ship)&&b.path.slice(1).some(p=>eq(p,target)),reason:!charged(s,ship)?'先蓄力，并等待对手行动结束':'目标不在贯穿射线内'};}
+ if(ship.type==='flag'){const b=beam(s,ship,target);return {...b,ok:charged(s,ship)&&b.ok,reason:!charged(s,ship)?'先蓄力，并等待对手行动结束':'目标须在前方 45°、14 格内，且射线未被小行星截断'};}
  const muzzle=ship.p,delta=target.map((v,i)=>v-muzzle[i]),n=Math.max(...delta.map(Math.abs));if(!n||n>TYPES[ship.type].range)return {ok:false,path:[],reason:'超出近防炮射程'};
  const d=delta.map(v=>v/n);if(!d.every(v=>[-1,0,1].includes(v)))return {ok:false,path:[],reason:'只能沿轴线或等距对角线射击'};
  const path=[muzzle];for(let i=1;i<=n;i++){const p=add(muzzle,mul(d,i));path.push(p);if(rockAt(s,p)||nebulaAt(s,p))return {ok:false,path,reason:rockAt(s,p)?'小行星阻挡':'星云阻挡普通能量炮'};const hit=at(s,p,ship.id);if(hit)return {ok:i===n&&alive(hit.ship)&&hit.ship.team!==ship.team&&hit.part.hp>0,path,hit,reason:'舰体或残骸阻挡'};}return {ok:false,path,reason:'没有敌方目标'};
@@ -67,7 +115,7 @@ export function validAction(s,a,team=s.turn){
  if(a.kind==='charge')return canCharge(ship)?null:'无法蓄力：检查主炮、蓄能舱和当前充能状态';
  if(a.kind==='reload')return ship.type==='arsenal'&&ship.ammo<4&&!ship.parts.some(p=>p.role==='weapon'&&p.hp===0)?null:'无需或无法装填';
  if(a.kind==='group'){const g=groupMove(s,ship,a.type,a.dir,a.steps);return g.ok?null:g.reason;}
- if(a.kind==='fire'&&ship.type==='flag')return weaponReady(ship)&&charged(s,ship)&&beam(s,ship).path.length>1?null:'主炮尚未完成蓄力，或炮口被小行星阻挡';
+ if(a.kind==='fire'&&ship.type==='flag'){if(a.target!==undefined&&!inside(a.target))return '无效目标';return weaponReady(ship)&&charged(s,ship)&&beam(s,ship,a.target).ok?null:'主炮未就绪，或目标超出前方 45°射界、射程或被小行星遮挡';}
  if(a.kind==='fire'){if(!inside(a.target))return '无效目标';const t=trace(s,ship,a.target);return t.ok?null:t.reason;}return '未知指令';
 }
 export const shieldActive=s=>s.type==='aegis'&&alive(s)&&s.parts.find(p=>p.role==='shield')?.hp>0;
@@ -97,7 +145,7 @@ export function applyAction(state,action,team=state.turn){
  else if(action.kind==='group'){const g=groupMove(s,ship,action.type,action.dir,action.steps);for(const unit of g.ships){unit.p=add(unit.p,g.delta);activated.push(unit.id);}events.push(`指挥舰联动 ${g.ships.length} 艘${TYPES[action.type].short}，${DIR_NAMES[action.dir]} ${action.steps} 格`);}
  else if(action.kind==='fire'){
   if(ship.type==='arsenal'){ship.ammo--;s.missiles.push({id:`m${s.ply}`,team,sourceId:ship.id,target:[...action.target],due:s.turnIndex+2});effects.push({kind:'missile',path:[ship.p,[...action.target]],team});events.push(`武库舰锁定 ${coord(action.target)}，敌方回合结束时引爆`);}
-  else if(ship.type==='flag'){const b=beam(s,ship);effects.push({path:b.path,kind:'beam',heavy:true,team});ship.charge=null;events.push('母舰释放贯穿主炮');for(const p of b.path.slice(1))damage(s,p,4,events,impacts);if(!impacts.length)events.push('射线未命中舰体');}
+  else if(ship.type==='flag'){const b=beam(s,ship,action.target);effects.push({path:b.ray,kind:'beam',heavy:true,team});ship.charge=null;events.push(action.target?`母舰瞄准 ${coord(action.target)}，释放贯穿主炮`:'母舰释放贯穿主炮');for(const p of b.path.slice(1))damage(s,p,4,events,impacts);if(!impacts.length)events.push('射线未命中舰体');}
   else {effects.push({path:trace(s,ship,action.target).path,kind:'beam',team});damage(s,action.target,TYPES[ship.type].damage,events,impacts);}
  }
  if(ship){activated.push(ship.id);s.acted=[...new Set([...s.acted,...activated])];s.actionsLeft--;}
@@ -119,18 +167,19 @@ export function applyAction(state,action,team=state.turn){
  s.log=[...s.log,...events.map(e=>`${String(s.ply).padStart(2,'0')} · ${e}`)].slice(-80);return s;
 }
 export function moves(s,ship){const result=[];for(const d of DIRS)for(let n=1;n<=TYPES[ship.type].speed;n++){const to=add(ship.p,mul(d,n));if(canMove(s,ship,to))result.push(to);}return result;}
-export function targets(s,ship){if(!weaponReady(ship))return [];if(ship.type==='flag')return charged(s,ship)?beam(s,ship).path.slice(1):[];if(ship.type==='arsenal'){const list=[];for(let x=0;x<SIZE[0];x++)for(let y=0;y<SIZE[1];y++)for(let z=0;z<SIZE[2];z++){const p=[x,y,z];if(trace(s,ship,p).ok)list.push(p);}return list;}return s.ships.filter(x=>x.team!==ship.team&&alive(x)).flatMap(x=>cells(x)).map(c=>c.p).filter(p=>trace(s,ship,p).ok);}
+export function targets(s,ship){if(!weaponReady(ship))return [];if(ship.type==='flag')return charged(s,ship)?cannonTargets(s,ship):[];if(ship.type==='arsenal'){const list=[];for(let x=0;x<SIZE[0];x++)for(let y=0;y<SIZE[1];y++)for(let z=0;z<SIZE[2];z++){const p=[x,y,z];if(trace(s,ship,p).ok)list.push(p);}return list;}return s.ships.filter(x=>x.team!==ship.team&&alive(x)).flatMap(x=>cells(x)).map(c=>c.p).filter(p=>trace(s,ship,p).ok);}
 const value=(ship,part)=>part.role==='core'?(ship.type==='flag'?12:ship.type==='station'?5:3):part.hp>0?1:0;
-function beamValue(s,ship){return beam(s,ship).hits.filter(h=>alive(h.ship)&&h.part.hp>0).reduce((n,h)=>n+(h.ship.team===ship.team?-1.7:1)*value(h.ship,h.part),0);}
+function shotValue(ship,shot){return shot.hits.filter(h=>alive(h.ship)&&h.part.hp>0).reduce((n,h)=>n+(h.ship.team===ship.team?-1.7:1)*value(h.ship,h.part),0);}
+function beamValue(s,ship){return Math.max(0,...cannonShots(s,ship).map(shot=>shotValue(ship,shot)));}
 function blastValue(s,team,p){return s.ships.filter(alive).reduce((n,ship)=>n+cells(ship).reduce((v,c)=>v+(c.part.hp>0&&distance(c.p,p)<=1?(ship.team===team?-2:1)*value(ship,c.part)*(eq(c.p,p)?2:1):0),0),0);}
 export function botAction(s){
  let best={kind:'end_turn'},score=-1000;const enemies=s.ships.filter(x=>x.team!==s.turn&&alive(x)),consider=(action,n)=>{if(n>score&&!validAction(s,action)){score=n;best=action;}};
  for(const ship of s.ships.filter(x=>available(s,x))){
   const goal=[...enemies].sort((a,b)=>distance(ship.p,a.p)-distance(ship.p,b.p))[0];
-  if(ship.type==='flag'){const v=beamValue(s,ship);if(charged(s,ship)&&v>0)consider({kind:'fire',id:ship.id},20+v);if(canCharge(ship)&&v>0)consider({kind:'charge',id:ship.id},12+v);}
+  if(ship.type==='flag'){const shots=cannonShots(s,ship),v=Math.max(0,...shots.map(b=>shotValue(ship,b)));if(charged(s,ship))for(const b of shots){const score=shotValue(ship,b);if(score>0)consider({kind:'fire',id:ship.id,target:b.target},20+score);}if(canCharge(ship)&&v>0)consider({kind:'charge',id:ship.id},12+v);}
   else if(ship.type==='arsenal'){if(ship.ammo===0)consider({kind:'reload',id:ship.id},6);else for(const enemy of enemies)for(const c of cells(enemy))if(trace(s,ship,c.p).ok){const v=blastValue(s,s.turn,c.p);if(v>0)consider({kind:'fire',id:ship.id,target:c.p},8+v);}}
   else for(const p of targets(s,ship)){const h=at(s,p);consider({kind:'fire',id:ship.id,target:p},11+value(h.ship,h.part));}
-  for(const to of moves(s,ship)){let n=1+(distance(ship.p,goal.p)-distance(to,goal.p))*.9;const test={...s,ships:s.ships.map(x=>x.id===ship.id?{...x,p:to,charge:null}:x)},moved=test.ships.find(x=>x.id===ship.id);if(ship.type==='flag')n+=Math.max(0,beamValue(test,moved));else if(ship.type!=='arsenal'&&targets(test,moved).length)n+=5;if(s.missiles.some(m=>distance(ship.p,m.target)<=1)&&!s.missiles.some(m=>distance(to,m.target)<=1))n+=18;if(s.missiles.some(m=>distance(to,m.target)<=1))n-=16;for(const flag of enemies.filter(x=>x.type==='flag'&&x.charge))if(beam(test,flag).hits.some(h=>h.ship.id===ship.id))n-=12;consider({kind:'move',id:ship.id,to},n+((s.ply+to[0]*3+to[1]*7+to[2]*11)%17)/100);}
+  for(const to of moves(s,ship)){let n=1+(distance(ship.p,goal.p)-distance(to,goal.p))*.9;const test={...s,ships:s.ships.map(x=>x.id===ship.id?{...x,p:to,charge:null}:x)},moved=test.ships.find(x=>x.id===ship.id);if(ship.type==='flag')n+=Math.max(0,beamValue(test,moved));else if(ship.type!=='arsenal'&&targets(test,moved).length)n+=5;if(s.missiles.some(m=>distance(ship.p,m.target)<=1)&&!s.missiles.some(m=>distance(to,m.target)<=1))n+=18;if(s.missiles.some(m=>distance(to,m.target)<=1))n-=16;for(const flag of enemies.filter(x=>x.type==='flag'&&x.charge))if(cells(moved).some(c=>trace(test,flag,c.p).ok))n-=12;consider({kind:'move',id:ship.id,to},n+((s.ply+to[0]*3+to[1]*7+to[2]*11)%17)/100);}
   if(ship.type==='flag')for(let d=0;d<6;d++)if(canRotate(s,ship,d)){const rotated={...ship,dir:d},test={...s,ships:s.ships.map(x=>x.id===ship.id?rotated:x)};consider({kind:'rotate',id:ship.id,dir:d},2+Math.max(0,beamValue(test,rotated))*2);}
   if(ship.type==='command')for(const type of ['fighter','corvette'])for(let d=0;d<6;d++)for(let n=1;n<=TYPES[type].speed;n++){const g=groupMove(s,ship,type,d,n);if(!g.ok)continue;const progress=g.ships.reduce((v,u)=>v+Math.min(...enemies.map(e=>distance(u.p,e.p)))-Math.min(...enemies.map(e=>distance(add(u.p,g.delta),e.p))),0);consider({kind:'group',id:ship.id,type,dir:d,steps:n},progress*.8);}
  }return best;

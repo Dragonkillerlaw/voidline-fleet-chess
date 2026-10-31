@@ -1,15 +1,16 @@
 import en from './locales/en.json' with {type:'json'};
 export const PROFILE_KEY='voidline-player-v1';
 export const PROGRESS_KEY='voidline-academy-v1';
-export function readProfile(value){try{const p=JSON.parse(value||'{}');return {name:typeof p?.name==='string'?p.name.trim().slice(0,24):'',locale:p?.locale==='en'?'en':'zh'};}catch{return {name:'',locale:'zh'};}}
-export function languageFrom(search,saved='zh'){const lang=new URLSearchParams(search).get('lang');return lang==='en'||lang==='zh'?lang:saved==='en'?'en':'zh';}
+export const DEFAULT_LOCALE='en';
+export function readProfile(value){try{const p=JSON.parse(value||'{}');return {name:typeof p?.name==='string'?p.name.trim().slice(0,24):'',locale:p?.locale==='zh'?'zh':DEFAULT_LOCALE};}catch{return {name:'',locale:DEFAULT_LOCALE};}}
+export function languageFrom(search,saved=DEFAULT_LOCALE){const lang=new URLSearchParams(search).get('lang');return lang==='en'||lang==='zh'?lang:saved==='zh'?'zh':DEFAULT_LOCALE;}
 export function languageLink(href,locale){if(typeof href!=='string'||!href.startsWith('/')||href.startsWith('//'))return href;const url=new URL(href,'https://voidline.local');url.searchParams.set('lang',locale);return url.pathname+url.search+url.hash;}
 const escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const patterns=Object.entries(en).filter(([k])=>/\{\d+\}/.test(k)).sort((a,b)=>b[0].replace(/\{\d+\}/g,'').length-a[0].replace(/\{\d+\}/g,'').length).map(([key,value])=>({re:new RegExp('^'+key.split(/\{\d+\}/).map(escape).join('(.*)')+'$'),value,indices:[...key.matchAll(/\{(\d+)\}/g)].map(m=>Number(m[1]))}));
 const literals=Object.keys(en).filter(k=>!k.includes('{')&&k.length>1).sort((a,b)=>b.length-a.length);
 const fragments=new RegExp(literals.map(escape).join('|'),'g');
 // Shared state stays language neutral. Localize display messages, including saved v3 logs.
-export function translate(input,locale='zh',depth=0){
+export function translate(input,locale=DEFAULT_LOCALE,depth=0){
  const value=translateMessage(input,locale,depth);
  return locale==='en'&&typeof value==='string'?value.replace(/\b(\d+) (action|ship|missile|module|turn)\(s\)/g,(_,n,noun)=>`${n} ${noun}${n==='1'?'':'s'}`).replace(/\b1 cells\b/g,'1 cell').replace(/\b1 minutes\b/g,'1 minute'):value;
 }

@@ -4,20 +4,24 @@ A playable 3D fleet tactics prototype. Original procedural ship geometry and low
 
 ## 快速开始 / Quick start
 
-VOIDLINE 是以三维空间、舰体舱段和两舰协作为核心的太空战术棋。包括 4 课基础教学、3 套开局计划和 4 道残局题。
+VOIDLINE is a 3D fleet tactics game with six ship-skill lessons, four fleet-combination lessons, four endgame puzzles and three opening plans. English is the default interface; Chinese remains available from the header.
+
+VOIDLINE 是以三维空间、舰体舱段和两舰协作为核心的太空战术棋。包括 6 课单舰教学、4 课协同战术、4 道残局题和 3 套开局计划。
 
 [English version](https://voidline-fleet-chess.citrusjay16.chatgpt.site/?lang=en) · 可在右上角随时切换语言。
 
 线上版本：[VOIDLINE](https://voidline-fleet-chess.citrusjay16.chatgpt.site/)（保留原站点访问权限）。
 
-需要 Node.js 22.13 或更高版本。
+Requires Node.js 22.13 or later / 需要 Node.js 22.13 或更高版本。
 
 ```sh
 npm ci
 npm run dev -- --host 127.0.0.1 --port 5180
 ```
 
-打开 [本地预览](http://127.0.0.1:5180)。开发服务器仅用于本机预览，会使用本地模拟登录。AI、教学和本机双人可直接使用；房间对战依赖 Cloudflare D1，集成检查见下方 Development。
+Open the [local preview](http://127.0.0.1:5180). The development server uses a local simulated sign-in. Tutorials, AI and same-device duels work locally; online rooms use Cloudflare D1. See Development below for room integration checks.
+
+开发服务器仅用于本机预览，会使用本地模拟登录。AI、教学和本机双人可直接使用；房间对战依赖 Cloudflare D1，集成检查见下方 Development。
 
 ```sh
 node --test tests/*.test.mjs
@@ -30,7 +34,7 @@ npm run build
 ## Play
 
 - The homepage is a player command deck: edit your local callsign, continue the next unfinished exercise, see real lesson/puzzle progress, or choose AI, local two-player or online rooms. Profile and progress are saved on this device, not in a cloud account.
-- Switch between Chinese and English in the header. `/?lang=en` opens the English version; language is remembered and carried through internal links and room invitations. Training, hints, opening explanations, commands, combat feedback, canvas labels and errors are translated. Switching language preserves the current game and pending action. Shared rules, game IDs and room state remain unchanged.
+- English is the default interface for new visitors. Switch between English and Chinese in the header, or open `/?lang=en` / `/?lang=zh`; an explicit URL language takes priority over your saved preference. Language is remembered and carried through internal links and room invitations. Training, hints, opening explanations, commands, combat feedback, canvas labels and errors are translated. Switching language preserves the current game and pending action. Shared rules, game IDs and room state remain unchanged.
 - `/academy` opens six ship-skill lessons, four fleet-combination lessons, four endgame puzzles and three opening walkthroughs. Hints, undo, retry, demonstrations and browser-local progress are supported; demonstrations do not count as completion. Link directly with `/academy?study=firing-square` or `/academy?tab=puzzle`. `/play?mode=ai`, `local` or `online` selects a game entry; original `/?room=` invitation links still work.
 - Opening walkthroughs show a legal plan, one illustrative opponent response, the tradeoff, and live range/shield facts. Continue the resulting position against AI using `/play?opening=escort` (or `flanks`, `reserve`). They are not claims of optimal play.
 - AI exercise: human blue, deterministic heuristic AI orange.
@@ -66,7 +70,7 @@ Translation is axis-aligned and the complete hull must clear each intermediate v
 
 Ordinary guns follow the 26 axial/diagonal rays and stop at rocks, nebula, hulls and wrecks. Missile blasts can damage friends, ignore intervening obstacles, and cannot target rock cells. Ships may traverse nebula. Damage applies to individual modules: engine loss immobilizes larger ships; weapon loss disables their gun; capacitor loss disables charging. Aegis shields are shared pools, not separate shields on each ally.
 
-Version 1/2 room snapshots are retained in storage but cannot be opened under version 3 rules. Create a new room for Strategy 03. Local session storage is versioned to avoid restoring an incompatible seat.
+Older room snapshots are retained in storage but cannot be opened under version 4 rules. Create a new room for the current cannon rules. Local session storage is versioned to avoid restoring an incompatible seat.
 
 ## Feedback and interface
 

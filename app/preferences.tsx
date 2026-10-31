@@ -1,10 +1,10 @@
 "use client";
 import {cloneElement,createContext,isValidElement,useContext,useEffect,useState,type ReactNode,type ReactElement} from 'react';
-import {PROFILE_KEY,readProfile,languageFrom,languageLink,translate} from '../game/i18n.mjs';
+import {DEFAULT_LOCALE,PROFILE_KEY,readProfile,languageFrom,languageLink,translate} from '../game/i18n.mjs';
 type Locale='zh'|'en';
-const Preferences=createContext({locale:'zh' as Locale,name:'',ready:false,saved:true,setLocale:(_value:Locale)=>{},setName:(_value:string)=>{}});
+const Preferences=createContext({locale:DEFAULT_LOCALE as Locale,name:'',ready:false,saved:true,setLocale:(_value:Locale)=>{},setName:(_value:string)=>{}});
 export function PreferencesProvider({children}:{children:ReactNode}){
- const [locale,setLanguage]=useState<Locale>('zh'),[name,setPlayerName]=useState(''),[ready,setReady]=useState(false),[saved,setSaved]=useState(true);
+ const [locale,setLanguage]=useState<Locale>(DEFAULT_LOCALE),[name,setPlayerName]=useState(''),[ready,setReady]=useState(false),[saved,setSaved]=useState(true);
  useEffect(()=>{let profile=readProfile(null);try{profile=readProfile(localStorage.getItem(PROFILE_KEY));}catch{setSaved(false);}setPlayerName(profile.name);setLanguage(languageFrom(window.location.search,profile.locale));setReady(true);},[]);
  useEffect(()=>{if(!ready)return;document.documentElement.lang=locale==='en'?'en':'zh-CN';document.title=locale==='en'?'VOIDLINE · Fleet Chess':'VOIDLINE · 深空舰队棋';try{localStorage.setItem(PROFILE_KEY,JSON.stringify({name,locale}));setSaved(true);}catch{setSaved(false);}},[name,locale,ready]);
  function setLocale(value:Locale){setLanguage(value);const url=new URL(window.location.href);url.searchParams.set('lang',value);window.history.replaceState(null,'',url.pathname+url.search+url.hash);}
